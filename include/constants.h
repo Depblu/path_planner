@@ -34,15 +34,17 @@ static const bool coutDEBUG = false;
 /// A flag for the mode (true = manual; false = dynamic). Manual for static map or dynamic for dynamic map.
 static const bool manual = true;
 /// A flag for the visualization of 3D nodes (true = on; false = off)
-static const bool visualization = false && manual;
+static const bool visualization = true && manual;
 /// A flag for the visualization of 2D nodes (true = on; false = off)
 static const bool visualization2D = false && manual;
 /// A flag to toggle reversing (true = on; false = off)
 static const bool reverse = true;
 /// A flag to toggle the connection of the path via Dubin's shot (true = on; false = off)
-static const bool dubinsShot = true;
+static const bool dubinsShot = false;
 /// A flag to toggle the Dubin's heuristic, this should be false, if reversing is enabled (true = on; false = off)
 static const bool dubins = false;
+/// ls add
+static const bool ReedsShepps = false;
 /*!
    \var static const bool dubinsLookup
    \brief A flag to toggle the Dubin's heuristic via lookup, potentially speeding up the search by a lot
@@ -56,15 +58,17 @@ static const bool twoD = true;
 // GENERAL CONSTANTS
 
 /// [#] --- Limits the maximum search depth of the algorithm, possibly terminating without the solution
-static const int iterations = 30000;
+static const int iterations = 300000;
 /// [m] --- Uniformly adds a padding around the vehicle
 static const double bloating = 0;
 /// [m] --- The width of the vehicle
-static const double width = 1.75 + 2 * bloating;
+//static const double width = 1.75 + 2 * bloating;
+static const double width = 1.95 + 2 * bloating;
 /// [m] --- The length of the vehicle
-static const double length = 2.65 + 2 * bloating;
+//static const double length = 2.65 + 2 * bloating;
+static const double length = 4.95 + 2 * bloating;
 /// [m] --- The minimum turning radius of the vehicle
-static const float r = 6;
+static const float r = 6.5;
 /// [m] --- The number of discretizations in heading
 static const int headings = 72;
 /// [°] --- The discretization value of the heading (goal condition)

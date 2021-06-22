@@ -47,7 +47,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
   int iterations = 0;
 
   // VISUALIZATION DELAY
-  ros::Duration d(0.003);
+  //ros::Duration d(0.1);
 
   // OPEN LIST AS BOOST IMPLEMENTATION
   typedef boost::heap::binomial_heap<Node3D*,
@@ -132,6 +132,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
     if (Constants::visualization) {
       visualization.publishNode3DPoses(*nPred);
       visualization.publishNode3DPose(*nPred);
+      ros::Duration d(0.000);
       d.sleep();
     }
 
@@ -155,6 +156,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
       // GOAL TEST
       if (*nPred == goal || iterations > Constants::iterations) {
         // DEBUG
+        ROS_INFO("find goal iter num:%d", iterations);
         return nPred;
       }
 
@@ -169,6 +171,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
           if (nSucc != nullptr && *nSucc == goal) {
             //DEBUG
             // std::cout << "max diff " << max << std::endl;
+            ROS_INFO("dubinsShot find goal iter num:%d", iterations);
             return nSucc;
           }
         }
@@ -178,6 +181,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
         for (int i = 0; i < dir; i++) {
           // create possible successor
           nSucc = nPred->createSuccessor(i);
+          //ROS_INFO("nPred (%f,%f) createSuccessor nSucc (%f, %f)", nPred->getX(), nPred->getY(), nSucc->getX(), nSucc->getY());
           // set index of the successor
           iSucc = nSucc->setIdx(width, height);
 
@@ -224,6 +228,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
     }
   }
 
+  ROS_INFO("not path found! iter num:%d", iterations);
   if (O.empty()) {
     return nullptr;
   }
@@ -234,6 +239,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
 //###################################################
 //                                        2D A*
 //###################################################
+#if 0
 float aStar(Node2D& start,
             Node2D& goal,
             Node2D* nodes2D,
@@ -252,7 +258,7 @@ float aStar(Node2D& start,
   }
 
   // VISUALIZATION DELAY
-  ros::Duration d(0.001);
+
 
   boost::heap::binomial_heap<Node2D*,
         boost::heap::compare<CompareNodes>> O;
@@ -295,7 +301,8 @@ float aStar(Node2D& start,
       if (Constants::visualization2D) {
         visualization.publishNode2DPoses(*nPred);
         visualization.publishNode2DPose(*nPred);
-        //        d.sleep();
+        ros::Duration d(0.000);
+        d.sleep();
       }
 
       // remove node from open list
@@ -344,6 +351,57 @@ float aStar(Node2D& start,
   // return large number to guide search away
   return 1000;
 }
+
+#else
+float aStar(Node2D& start,
+            Node2D& goal,
+            Node2D* nodes2D,
+            int width,
+            int height,
+            CollisionDetection& configurationSpace,
+            Visualize& visualization)
+{
+  const unsigned step = 1; // 0 compresses the path as much as possible and only records waypoints.
+  // Set this to 1 if you want a detailed single-step path
+  // (e.g. if you plan to further mangle the path yourself),
+  // or any other higher value to output every Nth position.
+  // (Waypoints are always output regardless of the step size.)
+
+  JPS::PathVector path; // The resulting path will go here.
+  // You may also use std::vector or whatever, as long as your vector type
+  // has push_back(), begin(), end(), resize() methods (same semantics as std::vector).
+  // Note that the path will NOT include the starting position!
+  // --> If called with start == end it will report that a path has been found,
+  //     but the resulting path vector will be empty!
+
+
+  // Single-call interface:
+  // (Further remarks about this function can be found near the bottom of this file.)
+  // Note that the path vector is NOT cleared! New path points are appended at the end.
+  bool found = JPS::findPath(path, configurationSpace, start.getX(), start.getY(), goal.getX(), goal.getY(), step);
+  float score = 0;
+  if(found){
+    for(unsigned int i = 1; i < path.size(); i++){
+      Node2D n2d(path[i].x, path[i].y, 0, 0, nullptr);
+      n2d.discover();
+      if (Constants::visualization2D) {
+        visualization.publishNode2DPoses(n2d);
+      }
+      const int dx = (int(path[i].x - path[i-1].x));
+      const int dy = (int(path[i].y - path[i-1].y));
+      //Euclidean + Chebyshev can make the search faster. Why??
+      score += sqrt((float)(dx*dx + dy*dy));
+      //score += dx*dx + dy*dy;
+      score += JPS::Heuristic::Chebyshev(path[i], path[i-1]);
+    }
+  }else{
+    score = 1000000.0;
+  }
+  //ROS_INFO("%s score:%f", __FUNCTION__, score);
+  return (float)score;
+
+}
+#endif
 
 //###################################################
 //                                         COST TO GO
@@ -415,7 +473,7 @@ void updateH(Node3D& start, const Node3D& goal, Node2D* nodes2D, float* dubinsLo
   }
 
   // if reversing is active use a
-  if (Constants::reverse && !Constants::dubins) {
+  if (Constants::ReedsShepps && !Constants::dubins) {
     //    ros::Time t0 = ros::Time::now();
     ompl::base::ReedsSheppStateSpace reedsSheppPath(Constants::r);
     State* rsStart = (State*)reedsSheppPath.allocState();
@@ -454,7 +512,13 @@ void updateH(Node3D& start, const Node3D& goal, Node2D* nodes2D, float* dubinsLo
   }
 
   // return the maximum of the heuristics, making the heuristic admissable
+#if 0
   start.setH(std::max(reedsSheppCost, std::max(dubinsCost, twoDCost)));
+#else
+  const float reedsSheppWeight = 0.0;
+  const float twoDWeight = 1.0 - reedsSheppWeight;
+  start.setH(reedsSheppWeight*reedsSheppCost+ 0.0*dubinsCost + twoDWeight*twoDCost);
+#endif
 }
 
 //###################################################

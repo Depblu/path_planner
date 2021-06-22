@@ -35,6 +35,7 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bucketedqueue.cpp #Boris Lau, Christoph Sprunk, Wolfram Burgard
     )
 set(HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/jps.hh
     ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/node2d.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/node3d.h
@@ -86,3 +87,6 @@ install(TARGETS ${PROJECT_NAME} tf_broadcaster
 install(DIRECTORY launch/
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
     )
+
+#SET(CMAKE_BUILD_TYPE "Debug")
+#SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")

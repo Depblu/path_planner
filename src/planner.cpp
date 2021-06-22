@@ -26,6 +26,7 @@ Planner::Planner() {
 
   subGoal = n.subscribe("/move_base_simple/goal", 1, &Planner::setGoal, this);
   subStart = n.subscribe("/initialpose", 1, &Planner::setStart, this);
+  grid = nullptr;
 };
 
 //###################################################
@@ -46,8 +47,9 @@ void Planner::setMap(const nav_msgs::OccupancyGrid::Ptr map) {
   if (Constants::coutDEBUG) {
     std::cout << "I am seeing the map..." << std::endl;
   }
-
-  grid = map;
+  if (grid == nullptr) {
+    grid = map;
+  }
   //update the configuration space with the current map
   configurationSpace.updateGrid(map);
   //create array for Voronoi diagram
@@ -67,7 +69,8 @@ void Planner::setMap(const nav_msgs::OccupancyGrid::Ptr map) {
 
   voronoiDiagram.initializeMap(width, height, binMap);
   voronoiDiagram.update();
-  voronoiDiagram.visualize();
+  voronoiDiagram.prune();
+  voronoiDiagram.visualize("/home/lius/tmp/voronoi_result.ppm");
 //  ros::Time t1 = ros::Time::now();
 //  ros::Duration d(t1 - t0);
 //  std::cout << "created Voronoi Diagram in ms: " << d * 1000 << std::endl;
@@ -151,7 +154,13 @@ void Planner::setGoal(const geometry_msgs::PoseStamped::ConstPtr& end) {
 void Planner::plan() {
   // if a start as well as goal are defined go ahead and plan
   if (validStart && validGoal) {
-
+    {
+      ros::Time t0 = ros::Time::now();
+      setMap(grid);
+      ros::Time t1 = ros::Time::now();
+      ros::Duration d(t1 - t0);
+      std::cout << "setMap TIME in ms: " << d * 1000 << std::endl;
+    }
     // ___________________________
     // LISTS ALLOWCATED ROW MAJOR ORDER
     int width = grid->info.width;
@@ -209,7 +218,7 @@ void Planner::plan() {
     smoothedPath.updatePath(smoother.getPath());
     ros::Time t1 = ros::Time::now();
     ros::Duration d(t1 - t0);
-    std::cout << "TIME in ms: " << d * 1000 << std::endl;
+    std::cout << "hybridAStar TIME in ms: " << d * 1000 << std::endl;
 
     // _________________________________
     // PUBLISH THE RESULTS OF THE SEARCH

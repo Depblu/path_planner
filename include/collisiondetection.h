@@ -88,6 +88,16 @@ class CollisionDetection {
   */
   void updateGrid(nav_msgs::OccupancyGrid::Ptr map) {grid = map;}
 
+
+  inline bool operator()(unsigned x, unsigned y) const
+  {
+    if (x >= grid->info.width || y >= grid->info.height)
+      return false;
+    if (grid->data[y * grid->info.width + x] == 0)
+      return true;
+    return false;
+  }
+
  private:
   /// The occupancy grid
   nav_msgs::OccupancyGrid::Ptr grid;

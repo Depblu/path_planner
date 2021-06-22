@@ -11,8 +11,8 @@ const int Node3D::dir = 3;
 //const float Node3D::dt[] = { 0,         0.10472,   -0.10472};
 
 // R = 6, 6.75 DEG
-const float Node3D::dy[] = { 0,        -0.0415893,  0.0415893};
-const float Node3D::dx[] = { 0.7068582,   0.705224,   0.705224};
+const float Node3D::dy[] = { 0/Constants::cellSize,        -0.0415893/Constants::cellSize,  0.0415893/Constants::cellSize};
+const float Node3D::dx[] = { 0.7068582/Constants::cellSize,   0.705224/Constants::cellSize,   0.705224/Constants::cellSize};
 const float Node3D::dt[] = { 0,         0.1178097,   -0.1178097};
 
 // R = 3, 6.75 DEG
@@ -51,17 +51,33 @@ Node3D* Node3D::createSuccessor(const int i) {
   float tSucc;
 
   // calculate successor positions forward
+//  if (i < 3) {
+//    xSucc = x + dx[i] * cos(t) - dy[i] * sin(t);
+//    ySucc = y + dx[i] * sin(t) + dy[i] * cos(t);
+//    tSucc = Helper::normalizeHeadingRad(t + dt[i]);
+//  }
+//  // backwards
+//  else {
+//    xSucc = x - dx[i - 3] * cos(t) - dy[i - 3] * sin(t);
+//    ySucc = y - dx[i - 3] * sin(t) + dy[i - 3] * cos(t);
+//    tSucc = Helper::normalizeHeadingRad(t - dt[i - 3]);
+//  }
+
   if (i < 3) {
-    xSucc = x + dx[i] * cos(t) - dy[i] * sin(t);
-    ySucc = y + dx[i] * sin(t) + dy[i] * cos(t);
-    tSucc = Helper::normalizeHeadingRad(t + dt[i]);
+    float nt = t + dt[i];
+    xSucc = x + dx[i] * cos(nt);// - dy[i] * sin(t);
+    ySucc = y + dx[i] * sin(nt);// + dy[i] * cos(t);
+    tSucc = Helper::normalizeHeadingRad(nt);
   }
-  // backwards
+    // backwards
   else {
-    xSucc = x - dx[i - 3] * cos(t) - dy[i - 3] * sin(t);
-    ySucc = y - dx[i - 3] * sin(t) + dy[i - 3] * cos(t);
-    tSucc = Helper::normalizeHeadingRad(t - dt[i - 3]);
+    float nt = t - dt[i - 3];
+    xSucc = x - dx[i - 3] * cos(nt);// - dy[i - 3] * sin(t);
+    ySucc = y - dx[i - 3] * sin(nt);// + dy[i - 3] * cos(t);
+    tSucc = Helper::normalizeHeadingRad(nt);
   }
+
+
 
   return new Node3D(xSucc, ySucc, tSucc, g, 0, this, i);
 }
